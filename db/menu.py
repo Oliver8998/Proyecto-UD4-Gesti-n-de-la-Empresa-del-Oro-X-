@@ -1,5 +1,6 @@
 from db.config import session
 from db.models.models import Cliente, Tasacion, PrecioOro
+from log.log import Log
 
 def mostrar_menu():
     print("\n--------------------")
@@ -12,6 +13,8 @@ def mostrar_menu():
     print("7) Salir")
     print("\n--------------------")
 
+log = Log()
+
 def insertar_cliente():
     nombre = input("Nombre: ")
     apellidos = input("Apellidos: ")
@@ -20,6 +23,7 @@ def insertar_cliente():
     session.add(cliente)
     session.commit()
     print("Cliente guardado correctamente")
+    log.registrar(f"Cliente insertado: {nombre} {apellidos} ({email})")
 
 def listar_clientes():
     clientes = session.query(Cliente).all()

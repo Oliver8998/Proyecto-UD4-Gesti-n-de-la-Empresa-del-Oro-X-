@@ -26,8 +26,8 @@ class Tasacion(Base):
     id = Column(Integer, primary_key=True)
     fecha = Column(Date, nullable=False)
     cantidad_gramos = Column(Numeric(10,2), nullable=False)
-    estado = Column(String(20), nullable=False)  # TASACION / ACEPTADA / RECHAZADA
     precio_gramo = Column(Numeric(10,2), nullable=False)
+    estado = Column(String(20), nullable=False)
 
     cliente_id = Column(Integer, ForeignKey("cliente.id"), nullable=False)
     cliente = relationship("Cliente", back_populates="tasaciones")
