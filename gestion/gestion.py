@@ -24,9 +24,9 @@ class Gestion:
 
     def informePrecioOro(self):
         precios = session.query(PrecioOro).all()
-        with open("precio_oro.csv", "w", newline="") as f:
+        with open("precioOro.csv", "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["Fecha", "Precio kg"])
             for p in precios:
                 writer.writerow([p.fecha, p.precio_kg])
-        print("Informe de precio del oro exportado a precio_oro.csv")
+        print("Informe de precio del oro exportado a precioOro.csv")

@@ -15,11 +15,12 @@ def mostrarMenu():
     print("4) Eliminar cliente")
     print("5) Listar tasaciones")
     print("6) Listar precios del oro")
-    print("7) Informe de clientes")
-    print("8) Informe de tasaciones")
-    print("9) Informe de precios del oro")
-    print("11) Grafico evolución precio del oro")
-    print("12) Salir")
+    print("7) Exportar informe de clientes a CSV")
+    print("8) Exportar informe de tasaciones a CSV")
+    print("9) Exportar informe de precio del oro a CSV")
+    print("10) Generar grafico del precio del oro")
+    print("11) Exportar PDF completo")
+    print("0) Salir")
     print("--------------------")
 
 def insertarCliente():
@@ -93,7 +94,7 @@ def main():
             listarTasaciones()
         elif opcion == "6":
             listarPreciosOro()
-        elif opcion == "7":
+        if opcion == "7":
             gestion.informeClientes()
         elif opcion == "8":
             gestion.informeTasaciones()
@@ -102,10 +103,14 @@ def main():
         elif opcion == "10":
             graficoPrecioOro()
         elif opcion == "11":
+            from exportador import ExportadorPDF
+            pdf = ExportadorPDF()
+            pdf.exportarInformeCompleto()
+        elif opcion == "0":
             print("Has salido")
             break
         else:
-            print("Opción no válida")
+            print("Opción no valida")
 
 if __name__ == "__main__":
     main()

@@ -14,5 +14,5 @@ def graficoPrecioOro():
     plt.title("evolución del precio del oro")
     plt.xlabel("fecha")
     plt.ylabel("€/kg")
-    plt.savefig("grafico_precio_oro.png")
+    plt.savefig("graficoPrecioOro.png")
     plt.show()
