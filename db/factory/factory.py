@@ -1,70 +1,97 @@
-from faker import Faker
+# factory.py
 from datetime import date, timedelta
 import random
-from utils.config import session, engine
-from db.models.models import Base, Cliente, Tasacion, PrecioOro
+from utils.config import session
+from db.models.models import Usuario, Estado, Tasacion, Venta, PrecioOro
 
-Base.metadata.create_all(bind=engine)
+def seedUsuarios():
+    for i in range(1, 21):
+        u = Usuario(
+            nombre=f"Usuario{i}",
+            apellidos=f"Apellido{i}",
+            email=f"usuario{i}@example.com"
+        )
+        session.add(u)
+    session.commit()
+    print("20 usuarios insertados")
 
-fake = Faker("es_ES")
+def seedEstados():
+    estados = ["aceptada", "rechazada", "tasacion"]
+    for e in estados:
+        session.add(Estado(descripcion=e))
+    session.commit()
+    print("Estados insertados")
 
-def generarClientes():
-    lista_clientes = []
+def seedTasaciones():
+    usuarios = session.query(Usuario).all()
+    estados = {e.descripcion: e for e in session.query(Estado).all()}
+
+    # 400 aceptadas
+    for _ in range(400):
+        t = Tasacion(
+            fecha=date(2025, 1, 1) + timedelta(days=random.randint(0, 300)),
+            cantidad_gramos=round(random.uniform(10, 100), 2),
+            valor_estimado=round(random.uniform(500, 5000), 2),
+            usuario_id=random.choice(usuarios).id,
+            estado_id=estados["aceptada"].id
+        )
+        session.add(t)
+
+    # 30 rechazadas
+    for _ in range(30):
+        t = Tasacion(
+            fecha=date(2025, 1, 1) + timedelta(days=random.randint(0, 300)),
+            cantidad_gramos=round(random.uniform(10, 100), 2),
+            valor_estimado=round(random.uniform(500, 5000), 2),
+            usuario_id=random.choice(usuarios).id,
+            estado_id=estados["rechazada"].id
+        )
+        session.add(t)
+
+    # 20 tasacion
     for _ in range(20):
-        cliente = Cliente(
-            nombre=fake.first_name(),
-            apellidos=fake.last_name(),
-            fecha_nacimiento=fake.date_of_birth(minimum_age=18, maximum_age=75),
-            dni=fake.unique.ssn(),
-            email=fake.unique.email(),
-            nacionalidad=fake.country(),
-            telefono=fake.phone_number(),
-            direccion=fake.address(),
-            activo=True
+        t = Tasacion(
+            fecha=date(2025, 1, 1) + timedelta(days=random.randint(0, 300)),
+            cantidad_gramos=round(random.uniform(10, 100), 2),
+            valor_estimado=round(random.uniform(500, 5000), 2),
+            usuario_id=random.choice(usuarios).id,
+            estado_id=estados["tasacion"].id
         )
-        lista_clientes.append(cliente)
-        session.add(cliente)
-    session.commit()
-    return lista_clientes
-
-def generarPreciosOro():
-
-    precio = 113000
-    fecha = date(2025, 1, 1)
-    hoy = date.today()
-
-    while fecha <= hoy:
-        cambio = random.choice([-200, -100, 0, 100, 200])
-        precio += cambio
-        session.add(PrecioOro(fecha=fecha, precio_kg=precio))
-        fecha += timedelta(days=1)
+        session.add(t)
 
     session.commit()
+    print("Tasaciones insertadas")
 
-def generarTasaciones(clientes):
-    estados = ["aceptada"] * 400 + ["rechazada"] * 30 + ["tasacion"] * 20
-    fecha_inicio = date(2025, 1, 1)
-    hoy = date.today()
-
-    for estado in estados:
-        cliente = random.choice(clientes)
-        gramos = random.randint(1, 100)
-        precio_oro = session.query(PrecioOro).order_by(PrecioOro.fecha.desc()).first()
-        precio_gramo = precio_oro.precio_kg / 1000 if precio_oro else 113
-
-        tasacion = Tasacion(
-            fecha=fake.date_between(start_date=fecha_inicio, end_date=hoy),
-            cantidad_gramos=gramos,
-            estado=estado,
-            precio_gramo=precio_gramo,
-            cliente=cliente
+def seedVentas():
+    tasaciones = session.query(Tasacion).join(Estado).filter(Estado.descripcion=="aceptada").all()
+    for t in tasaciones:
+        v = Venta(
+            fecha=t.fecha + timedelta(days=random.randint(0, 5)),
+            importe=t.valor_estimado,
+            usuario_id=t.usuario_id,
+            tasacion_id=t.id
         )
-        session.add(tasacion)
-
+        session.add(v)
     session.commit()
+    print("Ventas insertadas")
+
+def seedPrecioOro():
+    inicio = date(2025, 1, 1)
+    hoy = date.today()
+    dias = (hoy - inicio).days
+    for i in range(dias + 1):
+        f = inicio + timedelta(days=i)
+        precio = round(random.uniform(50000, 60000), 2)  # EUR/kg
+        session.add(PrecioOro(fecha=f, precio_kg=precio))
+    session.commit()
+    print("PrecioOro insertado desde 2025-01-01 hasta hoy")
+
+def seedAll():
+    seedUsuarios()
+    seedEstados()
+    seedTasaciones()
+    seedVentas()
+    seedPrecioOro()
 
 if __name__ == "__main__":
-    clientes = generarClientes()
-    generarPreciosOro()
-    generarTasaciones(clientes)
-    print("Los datos iniciales se han insertado en la base de datos")
+    seedAll()

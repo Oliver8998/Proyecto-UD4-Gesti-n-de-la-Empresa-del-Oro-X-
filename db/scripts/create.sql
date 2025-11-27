@@ -30,3 +30,9 @@ CREATE TABLE Ventas (
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
     FOREIGN KEY (tasacion_id) REFERENCES Tasacion(id)
 );
+
+CREATE TABLE precio_oro (
+    id SERIAL PRIMARY KEY,
+    fecha DATE NOT NULL UNIQUE,
+    precio_kg NUMERIC(12,2) NOT NULL
+);

@@ -30,11 +30,11 @@ class Tasacion(Base):
 
     id = Column(Integer, primary_key=True)
     fecha = Column(Date, nullable=False)
-    cantidad_gramos = Column(Numeric(10,2), nullable=False)
-    valor_estimado = Column(Numeric(10,2), nullable=False)
+    cantidadGramos = Column(Numeric(10,2), nullable=False)
+    valorEstimado = Column(Numeric(10,2), nullable=False)
 
-    usuario_id = Column(Integer, ForeignKey("usuario.id"), nullable=False)
-    estado_id = Column(Integer, ForeignKey("estado.id"), nullable=False)
+    usuarioId = Column(Integer, ForeignKey("usuario.id"), nullable=False)
+    estadoId = Column(Integer, ForeignKey("estado.id"), nullable=False)
 
     usuario = relationship("Usuario", back_populates="tasaciones")
     estado = relationship("Estado", back_populates="tasaciones")
@@ -48,8 +48,14 @@ class Venta(Base):
     fecha = Column(Date, nullable=False)
     importe = Column(Numeric(10,2), nullable=False)
 
-    usuario_id = Column(Integer, ForeignKey("usuario.id"), nullable=False)
-    tasacion_id = Column(Integer, ForeignKey("tasacion.id"), nullable=False)
+    usuarioId = Column(Integer, ForeignKey("usuario.id"), nullable=False)
+    tasacionId = Column(Integer, ForeignKey("tasacion.id"), nullable=False)
 
     usuario = relationship("Usuario", back_populates="ventas")
     tasacion = relationship("Tasacion", back_populates="ventas")
+
+class PrecioOro(Base):
+    __tablename__ = "precio_oro"
+    id = Column(Integer, primary_key=True)
+    fecha = Column(Date, nullable=False, unique=True)
+    precio_kg = Column(Numeric(12,2), nullable=False)

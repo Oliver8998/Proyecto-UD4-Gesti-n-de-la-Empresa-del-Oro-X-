@@ -1,18 +1,46 @@
 import matplotlib.pyplot as plt
 from utils.config import session
-from db.models.models import PrecioOro
+from db.models.models import Usuario, Venta, Tasacion
 
-def graficoPrecioOro():
+class Graficos:
 
-    #sacar todos los precios ordenados por la fecha
-    precios = session.query(PrecioOro).order_by(PrecioOro.fecha.asc()).all()
+    def graficoOroPorCliente(self):
+        ventas = session.query(Venta).all()
+        datos = {}
+        for v in ventas:
+            nombre = f"{v.usuario.nombre} {v.usuario.apellidos}"
+            gramos = v.tasacion.cantidad_gramos
+            datos[nombre] = datos.get(nombre, 0) + float(gramos)
 
-    fechas = [p.fecha for p in precios]
-    valores = [p.precio_kg for p in precios]
+        clientes = list(datos.keys())
+        cantidades = list(datos.values())
 
-    plt.bar(fechas, valores)
-    plt.title("evolución del precio del oro")
-    plt.xlabel("fecha")
-    plt.ylabel("€/kg")
-    plt.savefig("graficoPrecioOro.png")
-    plt.show()
+        plt.figure(figsize=(10, 6))
+        plt.bar(clientes, cantidades, color="gold")
+        plt.title("Cantidad de oro vendido por cliente")
+        plt.xlabel("Cliente")
+        plt.ylabel("Gramos vendidos")
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
+        plt.savefig("graficoOroPorCliente.png")
+        plt.show()
+
+    def graficoVentasPorMes(self):
+        ventas = session.query(Venta).all()
+        datos = {}
+        for v in ventas:
+            mes = v.fecha.strftime("%Y-%m")
+            datos[mes] = datos.get(mes, 0) + float(v.importe)
+
+        meses = list(datos.keys())
+        totales = list(datos.values())
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(meses, totales, marker="o", color="blue")
+        plt.title("Total de ventas por mes")
+        plt.xlabel("Mes")
+        plt.ylabel("Importe total (€)")
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
+        plt.savefig("graficoVentasPorMes.png")
+        plt.show()
