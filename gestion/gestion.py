@@ -1,29 +1,32 @@
+import csv
 from db.config import session
 from db.models.models import Cliente, Tasacion, PrecioOro
-from sqlalchemy import func
 
 class Gestion:
+
     def informeClientes(self):
-        total = session.query(func.count(Cliente.id)).scalar()
-        activos = session.query(func.count(Cliente.id)).filter(Cliente.activo == True).scalar()
-        print("Informe de clientes")
-        print("Total clientes:", total)
-        print("Clientes activos:", activos)
+        clientes = session.query(Cliente).all()
+        with open("clientes.csv", "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["ID", "Nombre", "Apellidos", "Email", "Activo"])
+            for c in clientes:
+                writer.writerow([c.id, c.nombre, c.apellidos, c.email, c.activo])
+        print("Informe de clientes exportado a clientes.csv")
 
     def informeTasaciones(self):
-        total = session.query(func.count(Tasacion.id)).scalar()
-        aceptadas = session.query(func.count(Tasacion.id)).filter(Tasacion.estado == "aceptada").scalar()
-        rechazadas = session.query(func.count(Tasacion.id)).filter(Tasacion.estado == "rechazada").scalar()
-        print("Informe de tasaciones")
-        print("Total tasaciones:", total)
-        print("Aceptadas:", aceptadas)
-        print("Rechazadas:", rechazadas)
+        tasaciones = session.query(Tasacion).all()
+        with open("tasaciones.csv", "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["ID", "Estado", "Cantidad gramos", "Cliente ID"])
+            for t in tasaciones:
+                writer.writerow([t.id, t.estado, t.cantidad_gramos, t.cliente_id])
+        print("Informe de tasaciones exportado a tasaciones.csv")
 
     def informePrecioOro(self):
-        precio_max = session.query(func.max(PrecioOro.precio_kg)).scalar()
-        precio_min = session.query(func.min(PrecioOro.precio_kg)).scalar()
-        precio_prom = session.query(func.avg(PrecioOro.precio_kg)).scalar()
-        print("Informe precio oro")
-        print("Precio maximo:", round(precio_max, 2), "€/kg")
-        print("Precio minimo:", round(precio_min, 2), "€/kg")
-        print("Precio medio:", round(precio_prom, 2), "€/kg")
+        precios = session.query(PrecioOro).all()
+        with open("precio_oro.csv", "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["Fecha", "Precio kg"])
+            for p in precios:
+                writer.writerow([p.fecha, p.precio_kg])
+        print("Informe de precio del oro exportado a precio_oro.csv")
