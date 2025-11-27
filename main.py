@@ -1,4 +1,5 @@
 from db.config import session
+from db.graficos.graficos import graficoPrecioOro
 from db.models.models import Cliente, Tasacion, PrecioOro
 from gestion.gestion import Gestion
 from log.log import Log
@@ -6,7 +7,7 @@ from log.log import Log
 log = Log()
 gestion = Gestion()
 
-def mostrar_menu():
+def mostrarMenu():
     print("\n--------------------")
     print("1) Insertar cliente")
     print("2) Listar clientes")
@@ -17,10 +18,11 @@ def mostrar_menu():
     print("7) Informe de clientes")
     print("8) Informe de tasaciones")
     print("9) Informe de precios del oro")
-    print("10) Salir")
+    print("11) Grafico evolución precio del oro")
+    print("12) Salir")
     print("--------------------")
 
-def insertar_cliente():
+def insertarCliente():
     nombre = input("Nombre: ")
     apellidos = input("Apellidos: ")
     email = input("Email: ")
@@ -30,14 +32,14 @@ def insertar_cliente():
     print("Cliente guardado correctamente")
     log.registrar(f"Cliente insertado: {nombre} {apellidos} ({email})")
 
-def listar_clientes():
+def listarClientes():
     clientes = session.query(Cliente).all()
     for c in clientes:
         print(f"{c.id} - {c.nombre} {c.apellidos} ({c.email})")
 
-def modificar_cliente():
-    listar_clientes()
-    id_cliente = input("ID del cliente a modificar: ")
+def modificarCliente():
+    listarClientes()
+    id_cliente = input("Id del cliente a modificar: ")
     cliente = session.query(Cliente).get(int(id_cliente))
     if cliente:
         nuevo_nombre = input(f"Nuevo nombre ({cliente.nombre}): ") or cliente.nombre
@@ -48,12 +50,12 @@ def modificar_cliente():
         cliente.email = nuevo_email
         session.commit()
         print("Cliente actualizado correctamente")
-        log.registrar(f"Cliente modificado: ID {id_cliente}")
+        log.registrar(f"Cliente modificado: Id {id_cliente}")
     else:
         print("Cliente no encontrado")
 
-def eliminar_cliente():
-    listar_clientes()
+def eliminarCliente():
+    listarClientes()
     id_cliente = input("Id del cliente a eliminar: ")
     cliente = session.query(Cliente).get(int(id_cliente))
     if cliente:
@@ -64,33 +66,33 @@ def eliminar_cliente():
     else:
         print("No se encuentra al cliente")
 
-def listar_tasaciones():
+def listarTasaciones():
     tasaciones = session.query(Tasacion).all()
     for t in tasaciones:
         print(f"{t.id} - {t.estado} - {t.cantidad_gramos}g - Cliente {t.cliente_id}")
 
-def listar_precios_oro():
+def listarPreciosOro():
     precios = session.query(PrecioOro).order_by(PrecioOro.fecha.desc()).limit(5).all()
     for p in precios:
         print(f"{p.fecha} - {p.precio_kg} €/kg")
 
 def main():
     while True:
-        mostrar_menu()
-        opcion = input("Selecciona una opción: ")
+        mostrarMenu()
+        opcion = input("Selecciona una opcion: ")
 
         if opcion == "1":
-            insertar_cliente()
+            insertarCliente()
         elif opcion == "2":
-            listar_clientes()
+            listarClientes()
         elif opcion == "3":
-            modificar_cliente()
+            modificarCliente()
         elif opcion == "4":
-            eliminar_cliente()
+            eliminarCliente()
         elif opcion == "5":
-            listar_tasaciones()
+            listarTasaciones()
         elif opcion == "6":
-            listar_precios_oro()
+            listarPreciosOro()
         elif opcion == "7":
             gestion.informeClientes()
         elif opcion == "8":
@@ -98,10 +100,12 @@ def main():
         elif opcion == "9":
             gestion.informePrecioOro()
         elif opcion == "10":
+            graficoPrecioOro()
+        elif opcion == "11":
             print("Has salido")
             break
         else:
-            print("Opción no valida")
+            print("Opción no válida")
 
 if __name__ == "__main__":
     main()

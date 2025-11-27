@@ -8,7 +8,7 @@ Base.metadata.create_all(bind=engine)
 
 fake = Faker("es_ES")
 
-def generar_clientes():
+def generarClientes():
     lista_clientes = []
     for _ in range(20):
         cliente = Cliente(
@@ -64,7 +64,7 @@ def generarTasaciones(clientes):
     session.commit()
 
 if __name__ == "__main__":
-    clientes = generar_clientes()
+    clientes = generarClientes()
     generarPreciosOro()
     generarTasaciones(clientes)
     print("Los datos iniciales se han insertado en la base de datos")
