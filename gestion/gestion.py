@@ -1,5 +1,5 @@
 import csv
-from db.config import session
+from utils.config import session
 from db.models.models import Cliente, Tasacion, PrecioOro
 
 class Gestion:

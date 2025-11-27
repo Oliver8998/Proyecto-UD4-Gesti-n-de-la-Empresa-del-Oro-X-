@@ -1,7 +1,7 @@
 from faker import Faker
 from datetime import date, timedelta
 import random
-from db.config import session, engine
+from utils.config import session, engine
 from db.models.models import Base, Cliente, Tasacion, PrecioOro
 
 Base.metadata.create_all(bind=engine)

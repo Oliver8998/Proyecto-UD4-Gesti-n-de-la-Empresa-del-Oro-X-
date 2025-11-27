@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from db.config import session
+from utils.config import session
 from db.models.models import PrecioOro
 
 def graficoPrecioOro():

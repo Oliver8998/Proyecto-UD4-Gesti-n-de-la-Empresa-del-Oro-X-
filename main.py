@@ -1,4 +1,4 @@
-from db.config import session
+from utils.config import session
 from db.graficos.graficos import graficoPrecioOro
 from db.models.models import Cliente, Tasacion, PrecioOro
 from gestion.gestion import Gestion
