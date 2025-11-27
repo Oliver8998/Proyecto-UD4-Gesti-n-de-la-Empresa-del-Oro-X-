@@ -103,7 +103,7 @@ def main():
         elif opcion == "10":
             graficoPrecioOro()
         elif opcion == "11":
-            from exportador import ExportadorPDF
+            from utils.exportador import ExportadorPDF
             pdf = ExportadorPDF()
             pdf.exportarInformeCompleto()
         elif opcion == "0":
