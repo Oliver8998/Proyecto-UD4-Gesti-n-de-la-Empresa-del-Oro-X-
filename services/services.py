@@ -32,3 +32,11 @@ class Services:
 
     def getPrecioOroPorFecha(self, fecha):
         return session.query(PrecioOro).filter(PrecioOro.fecha == fecha).first()
+
+    def getVentas(self):
+        ventas = session.query(Venta).all()
+        from log.log import Log
+        log = Log()
+        log.info(f"Se han recuperado {len(ventas)} ventas de la BD")
+        return ventas
+
