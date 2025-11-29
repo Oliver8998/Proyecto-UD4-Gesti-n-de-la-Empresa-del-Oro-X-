@@ -1,5 +1,6 @@
 from fpdf import FPDF
 from log.log import Log
+import os
 
 log = Log()
 
@@ -46,21 +47,20 @@ class ExportadorPDF:
                 for linea in f:
                     pdf.cell(0, 8, linea.strip(), ln=True)
 
-            #si los gráficos ya existen se añaden
-            try:
+            if os.path.exists("graficoOroPorCliente.png"):
                 pdf.add_page()
                 pdf.set_font("Arial", "B", 12)
                 pdf.cell(0, 10, "Grafico: Cantidad de oro vendido por cliente", ln=True)
                 pdf.image("graficoOroPorCliente.png", x=10, y=30, w=180)
-            except Exception:
+            else:
                 log.warning("No se encontró graficoOroPorCliente.png, se omitirá en el PDF")
 
-            try:
+            if os.path.exists("graficoVentasPorMes.png"):
                 pdf.add_page()
                 pdf.set_font("Arial", "B", 12)
                 pdf.cell(0, 10, "Grafico: Total de ventas por mes", ln=True)
                 pdf.image("graficoVentasPorMes.png", x=10, y=30, w=180)
-            except Exception:
+            else:
                 log.warning("No se encontró graficoVentasPorMes.png, se omitirá en el PDF")
 
             pdf.output("informeCompleto.pdf")

@@ -2,6 +2,7 @@ from gestion.gestion import Gestion
 from db.graficos.graficos import Graficos
 from utils.exportador import ExportadorPDF
 from log.log import Log
+from db.factory.factory import seedAll
 
 log = Log()
 
@@ -18,6 +19,10 @@ def mostrarMenu():
     print("0) Salir")
 
 def main():
+    #poblar la BD automaticamente al inicio
+    seedAll()
+    log.info("Datos iniciales insertados en la BD")
+
     gestion = Gestion()
     graficos = Graficos()
     exportador = ExportadorPDF()

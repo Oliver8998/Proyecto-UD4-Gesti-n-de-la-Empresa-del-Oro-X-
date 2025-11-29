@@ -17,11 +17,12 @@ CREATE TABLE Tasacion (
     valor_estimado NUMERIC(10,2) NOT NULL,
     usuario_id INT NOT NULL,
     estado_id INT NOT NULL,
+    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
     FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
     FOREIGN KEY (estado_id) REFERENCES Estado(id)
 );
 
-CREATE TABLE Ventas (
+CREATE TABLE Venta (
     id SERIAL PRIMARY KEY,
     fecha DATE NOT NULL,
     importe NUMERIC(10,2) NOT NULL,

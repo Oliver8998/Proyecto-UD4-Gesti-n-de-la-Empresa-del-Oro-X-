@@ -2,12 +2,9 @@ from datetime import date, timedelta
 import random
 from log.log import Log
 from db.models.models import Usuario, Estado, Tasacion, Venta, PrecioOro
+from utils.config import session
 
 log = Log()
-
-from utils.config import session
-from db.models.models import Estado
-import logging
 
 def seedUsuarios():
     try:
@@ -15,11 +12,13 @@ def seedUsuarios():
             u = Usuario(
                 nombre=f"Usuario{i}",
                 apellidos=f"Apellido{i}",
-                email=f"usuario{i}@example.com"
+                email=f"usuario{i}@example.com",
+                activo=True
             )
             session.add(u)
         session.commit()
-        log.info("20 usuarios insertados")
+        total = session.query(Usuario).count()
+        log.info(f"{total} usuarios en la BD")
     except Exception as e:
         session.rollback()
         log.error(f"Error al insertar usuarios: {e}")
@@ -28,9 +27,11 @@ def seedEstados():
     try:
         estados = ["ACEPTADA", "RECHAZADA", "TASACION"]
         for e in estados:
-            session.add(Estado(descripcion=e))
+            if not session.query(Estado).filter_by(descripcion=e).first():
+                session.add(Estado(descripcion=e))
         session.commit()
-        log.info("Estados insertados")
+        total = session.query(Estado).count()
+        log.info(f"{total} estados en la BD")
     except Exception as e:
         session.rollback()
         log.error(f"Error al insertar estados: {e}")
@@ -73,7 +74,8 @@ def seedTasaciones():
             session.add(t)
 
         session.commit()
-        log.info("Tasaciones insertadas")
+        total = session.query(Tasacion).count()
+        log.info(f"{total} tasaciones en la BD")
     except Exception as e:
         session.rollback()
         log.error(f"Error al insertar tasaciones: {e}")
@@ -81,11 +83,15 @@ def seedTasaciones():
 def seedVentas():
     try:
         estado_aceptada = session.query(Estado).filter_by(descripcion="ACEPTADA").first()
-        tasaciones = session.query(Tasacion).filter_by(estado_id=estado_aceptada.id).all()
+        if not estado_aceptada:
+            log.error("No existe estado ACEPTADA en la BD")
+            return
 
+        tasaciones = session.query(Tasacion).filter_by(estado_id=estado_aceptada.id).all()
         log.info(f"Se encontraron {len(tasaciones)} tasaciones aceptadas")
 
         for t in tasaciones:
+            log.info(f"Insertando venta para tasacion {t.id} del usuario {t.usuario_id}")
             v = Venta(
                 fecha=t.fecha + timedelta(days=random.randint(0, 5)),
                 importe=t.valor_estimado,
@@ -95,7 +101,8 @@ def seedVentas():
             session.add(v)
 
         session.commit()
-        log.info(f"{len(tasaciones)} ventas insertadas")
+        total = session.query(Venta).count()
+        log.info(f"{total} ventas en la BD")
     except Exception as e:
         session.rollback()
         log.error(f"Error al insertar ventas: {e}")
@@ -110,7 +117,8 @@ def seedPrecioOro():
             precio = round(random.uniform(50000, 60000), 2)
             session.add(PrecioOro(fecha=f, precio_kg=precio))
         session.commit()
-        log.info("PrecioOro insertado desde 2025-01-01 hasta hoy")
+        total = session.query(PrecioOro).count()
+        log.info(f"{total} registros de precio del oro en la BD")
     except Exception as e:
         session.rollback()
         log.error(f"Error al insertar precio del oro: {e}")

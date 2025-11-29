@@ -56,7 +56,7 @@ class Venta(Base):
 
 
 class PrecioOro(Base):
-    __tablename__ = "precio_oro"
+    __tablename__ = "preciooro"
 
     id = Column(Integer, primary_key=True)
     fecha = Column(Date, nullable=False, unique=True)

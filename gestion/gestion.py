@@ -14,7 +14,7 @@ class Gestion:
                 w = csv.writer(f)
                 w.writerow(["Id", "Nombre", "Apellidos", "Email", "Activo"])
                 for u in usuarios:
-                    w.writerow([u.id, u.nombre, u.apellidos, u.email, u.activo])
+                    w.writerow([u.id, u.nombre, u.apellidos, u. email, u.activo])
             self.log.info("usuarios.csv generado")
         except Exception as e:
             self.log.error(f"Error al generar usuarios.csv: {e}")
