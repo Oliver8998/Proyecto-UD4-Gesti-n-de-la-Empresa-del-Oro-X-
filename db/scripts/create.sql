@@ -1,39 +1,41 @@
-CREATE TABLE Usuario (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
-    apellidos VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    activo BOOLEAN DEFAULT TRUE
+CREATE TABLE cliente (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(150) NOT NULL,
+    fecha_nacimiento DATE NOT NULL,
+    dni VARCHAR(20) UNIQUE NOT NULL,
+    email VARCHAR(120) UNIQUE,
+    nacionalidad VARCHAR(80) NOT NULL,
+    telefono VARCHAR(25),
+    direccion TEXT,
+    activo BOOLEAN DEFAULT TRUE NOT NULL
 );
 
-CREATE TABLE Estado (
-    id SERIAL PRIMARY KEY,
-    descripcion VARCHAR(50) NOT NULL
+CREATE TABLE tasacion (
+    id BIGSERIAL PRIMARY KEY,
+    fecha DATE UNIQUE NOT NULL,
+    valor_kg_eur NUMERIC(12,3) NOT NULL CHECK (valor_kg_eur > 0)
 );
 
-CREATE TABLE Tasacion (
-    id SERIAL PRIMARY KEY,
-    cantidad_gramos NUMERIC(10,2) NOT NULL,
-    valor_estimado NUMERIC(10,2) NOT NULL,
-    usuario_id INT NOT NULL,
-    estado_id INT NOT NULL,
-    fecha DATE NOT NULL DEFAULT CURRENT_DATE,
-    FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
-    FOREIGN KEY (estado_id) REFERENCES Estado(id)
+CREATE TABLE estado (
+    id BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(20) UNIQUE NOT NULL
 );
 
-CREATE TABLE Venta (
-    id SERIAL PRIMARY KEY,
+INSERT INTO estado (nombre) VALUES
+('TASACION'),
+('ACEPTADA'),
+('RECHAZADA');
+
+CREATE TABLE venta (
+    id BIGSERIAL PRIMARY KEY,
+    id_cliente BIGINT NOT NULL REFERENCES cliente(id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    id_tasacion BIGINT NOT NULL REFERENCES tasacion(id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    gramos NUMERIC(10,3) NOT NULL CHECK (gramos > 0),
+    precio_unitario_eur NUMERIC(12,3),
+    precio_total_eur NUMERIC(12,3) CHECK (precio_total_eur >= 0),
     fecha DATE NOT NULL,
-    importe NUMERIC(10,2) NOT NULL,
-    usuario_id INT NOT NULL,
-    tasacion_id INT NOT NULL,
-    FOREIGN KEY (usuario_id) REFERENCES Usuario(id),
-    FOREIGN KEY (tasacion_id) REFERENCES Tasacion(id)
-);
-
-CREATE TABLE PrecioOro (
-    id SERIAL PRIMARY KEY,
-    fecha DATE NOT NULL UNIQUE,
-    precio_kg NUMERIC(12,2) NOT NULL
+    id_estado BIGINT NOT NULL REFERENCES estado(id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    id_articulo BIGINT,
+    observaciones TEXT
 );

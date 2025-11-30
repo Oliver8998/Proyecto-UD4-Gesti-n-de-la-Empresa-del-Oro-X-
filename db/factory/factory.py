@@ -1,134 +1,106 @@
-from datetime import date, timedelta
 import random
-from log.log import Log
-from db.models.models import Usuario, Estado, Tasacion, Venta, PrecioOro
-from utils.config import session
+from datetime import date, timedelta
+from faker import Faker
+from decimal import Decimal
 
-log = Log()
+from db.config import Session
+from db.models.models import Cliente, Tasacion, Estado, Venta
+from log.log import LoggerApp
 
-def seedUsuarios():
-    try:
-        for i in range(1, 21):
-            u = Usuario(
-                nombre=f"Usuario{i}",
-                apellidos=f"Apellido{i}",
-                email=f"usuario{i}@example.com",
-                activo=True
-            )
-            session.add(u)
-        session.commit()
-        total = session.query(Usuario).count()
-        log.info(f"{total} usuarios en la BD")
-    except Exception as e:
-        session.rollback()
-        log.error(f"Error al insertar usuarios: {e}")
+logger = LoggerApp()
+db_session = Session()
+faker = Faker("es_ES")
 
-def seedEstados():
-    try:
-        estados = ["ACEPTADA", "RECHAZADA", "TASACION"]
-        for e in estados:
-            if not session.query(Estado).filter_by(descripcion=e).first():
-                session.add(Estado(descripcion=e))
-        session.commit()
-        total = session.query(Estado).count()
-        log.info(f"{total} estados en la BD")
-    except Exception as e:
-        session.rollback()
-        log.error(f"Error al insertar estados: {e}")
+def inicializar_datos():
+    lista_clientes = []
+    for _ in range(20):
+        nuevo_cliente = Cliente(
+            nombre=faker.first_name(),
+            apellidos=faker.last_name(),
+            fecha_nacimiento=faker.date_of_birth(minimum_age=18, maximum_age=70),
+            dni=str(faker.unique.random_number(digits=8)) + faker.random_letter().upper(),
+            email=faker.unique.email(),
+            nacionalidad="Español",
+            telefono=faker.phone_number(),
+            direccion=faker.address(),
+            activo=True
+        )
+        db_session.add(nuevo_cliente)
+        lista_clientes.append(nuevo_cliente)
 
-def seedTasaciones():
-    try:
-        usuarios = session.query(Usuario).all()
-        estado_aceptada = session.query(Estado).filter_by(descripcion="ACEPTADA").first()
-        estado_rechazada = session.query(Estado).filter_by(descripcion="RECHAZADA").first()
-        estado_tasacion = session.query(Estado).filter_by(descripcion="TASACION").first()
+    db_session.commit()
+    logger.info("Se han creado 20 clientes de prueba")
 
-        for _ in range(400):
-            t = Tasacion(
-                fecha=date(2025, 1, 1) + timedelta(days=random.randint(0, 300)),
-                cantidad_gramos=round(random.uniform(10, 100), 2),
-                valor_estimado=round(random.uniform(500, 5000), 2),
-                usuario_id=random.choice(usuarios).id,
-                estado_id=estado_aceptada.id
-            )
-            session.add(t)
+    fecha_inicio = date(2025, 1, 1)
+    fecha_actual = date.today()
+    dias_totales = (fecha_actual - fecha_inicio).days + 1
 
-        for _ in range(30):
-            t = Tasacion(
-                fecha=date(2025, 1, 1) + timedelta(days=random.randint(0, 300)),
-                cantidad_gramos=round(random.uniform(10, 100), 2),
-                valor_estimado=round(random.uniform(500, 5000), 2),
-                usuario_id=random.choice(usuarios).id,
-                estado_id=estado_rechazada.id
-            )
-            session.add(t)
+    precio_referencia = 3587.18
+    for i in range(dias_totales):
+        fecha_tasacion = fecha_inicio + timedelta(days=i)
+        ya_existe = db_session.query(Tasacion).filter_by(fecha=fecha_tasacion).first()
+        if not ya_existe:
+            variacion = random.uniform(-0.03, 0.03)
+            precio_referencia *= (1 + variacion)
+            nueva_tasacion = Tasacion(fecha=fecha_tasacion, valor_kg_eur=precio_referencia)
+            db_session.add(nueva_tasacion)
 
-        for _ in range(20):
-            t = Tasacion(
-                fecha=date(2025, 1, 1) + timedelta(days=random.randint(0, 300)),
-                cantidad_gramos=round(random.uniform(10, 100), 2),
-                valor_estimado=round(random.uniform(500, 5000), 2),
-                usuario_id=random.choice(usuarios).id,
-                estado_id=estado_tasacion.id
-            )
-            session.add(t)
+    db_session.commit()
+    logger.info(f"Tasaciones registradas desde {fecha_inicio} hasta {fecha_actual}")
 
-        session.commit()
-        total = session.query(Tasacion).count()
-        log.info(f"{total} tasaciones en la BD")
-    except Exception as e:
-        session.rollback()
-        log.error(f"Error al insertar tasaciones: {e}")
+    estado_tasacion = db_session.query(Estado).filter_by(nombre="TASACION").first()
+    estado_ok = db_session.query(Estado).filter_by(nombre="ACEPTADA").first()
+    estado_fail = db_session.query(Estado).filter_by(nombre="RECHAZADA").first()
 
-def seedVentas():
-    try:
-        estado_aceptada = session.query(Estado).filter_by(descripcion="ACEPTADA").first()
-        if not estado_aceptada:
-            log.error("No existe estado ACEPTADA en la BD")
-            return
+    todas_tasaciones = db_session.query(Tasacion).all()
 
-        tasaciones = session.query(Tasacion).filter_by(estado_id=estado_aceptada.id).all()
-        log.info(f"Se encontraron {len(tasaciones)} tasaciones aceptadas")
+    for _ in range(400):
+        cliente = random.choice(lista_clientes)
+        tasacion = random.choice(todas_tasaciones)
+        gramos = Decimal(str(random.uniform(1, 100)))
+        venta_ok = Venta(
+            id_cliente=cliente.id,
+            id_tasacion=tasacion.id,
+            gramos=gramos,
+            precio_unitario_eur=tasacion.valor_kg_eur / Decimal(1000),
+            precio_total_eur=(tasacion.valor_kg_eur / Decimal(1000)) * gramos,
+            fecha=tasacion.fecha,
+            id_estado=estado_ok.id,
+            observaciones="Venta aceptada"
+        )
+        db_session.add(venta_ok)
 
-        for t in tasaciones:
-            log.info(f"Insertando venta para tasacion {t.id} del usuario {t.usuario_id}")
-            v = Venta(
-                fecha=t.fecha + timedelta(days=random.randint(0, 5)),
-                importe=t.valor_estimado,
-                usuario_id=t.usuario_id,
-                tasacion_id=t.id
-            )
-            session.add(v)
+    for _ in range(30):
+        cliente = random.choice(lista_clientes)
+        tasacion = random.choice(todas_tasaciones)
+        gramos = Decimal(str(random.uniform(1, 100)))
+        venta_fail = Venta(
+            id_cliente=cliente.id,
+            id_tasacion=tasacion.id,
+            gramos=gramos,
+            precio_unitario_eur=tasacion.valor_kg_eur / Decimal(1000),
+            precio_total_eur=(tasacion.valor_kg_eur / Decimal(1000)) * gramos,
+            fecha=tasacion.fecha,
+            id_estado=estado_fail.id,
+            observaciones="Venta rechazada"
+        )
+        db_session.add(venta_fail)
 
-        session.commit()
-        total = session.query(Venta).count()
-        log.info(f"{total} ventas en la BD")
-    except Exception as e:
-        session.rollback()
-        log.error(f"Error al insertar ventas: {e}")
+    for _ in range(20):
+        cliente = random.choice(lista_clientes)
+        tasacion = random.choice(todas_tasaciones)
+        gramos = Decimal(str(random.uniform(1, 100)))
+        venta_tasacion = Venta(
+            id_cliente=cliente.id,
+            id_tasacion=tasacion.id,
+            gramos=gramos,
+            precio_unitario_eur=tasacion.valor_kg_eur / Decimal(1000),
+            precio_total_eur=(tasacion.valor_kg_eur / Decimal(1000)) * gramos,
+            fecha=tasacion.fecha,
+            id_estado=estado_tasacion.id,
+            observaciones="Venta en proceso de tasación"
+        )
+        db_session.add(venta_tasacion)
 
-def seedPrecioOro():
-    try:
-        inicio = date(2025, 1, 1)
-        hoy = date.today()
-        dias = (hoy - inicio).days
-        for i in range(dias + 1):
-            f = inicio + timedelta(days=i)
-            precio = round(random.uniform(50000, 60000), 2)
-            session.add(PrecioOro(fecha=f, precio_kg=precio))
-        session.commit()
-        total = session.query(PrecioOro).count()
-        log.info(f"{total} registros de precio del oro en la BD")
-    except Exception as e:
-        session.rollback()
-        log.error(f"Error al insertar precio del oro: {e}")
-
-def seedAll():
-    seedUsuarios()
-    seedEstados()
-    seedTasaciones()
-    seedVentas()
-    seedPrecioOro()
-
-if __name__ == "__main__":
-    seedAll()
+    db_session.commit()
+    logger.info("Ventas iniciales creadas: 400 aceptadas, 30 rechazadas, 20 en tasación")

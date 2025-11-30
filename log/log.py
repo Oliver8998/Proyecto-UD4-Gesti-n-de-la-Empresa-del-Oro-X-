@@ -1,20 +1,22 @@
 import logging
+import os
 
-class Log:
-    def __init__(self, archivo="acciones.log"):
-        # Configuración básica solo una vez
+class LoggerApp:
+    def __init__(self):
+        ruta_log = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.log")
         logging.basicConfig(
-            filename=archivo,
+            filename=ruta_log,
             level=logging.INFO,
-            format="%(asctime)s - %(levelname)s - %(message)s"
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            datefmt="%d/%m/%Y %H:%M:%S"
         )
-        self.logger = logging.getLogger("ProyectoOro")
+        self._logger = logging.getLogger("app_logger")
 
     def info(self, mensaje):
-        self.logger.info(mensaje)
+        self._logger.info(mensaje)
 
     def warning(self, mensaje):
-        self.logger.warning(mensaje)
+        self._logger.warning(mensaje)
 
     def error(self, mensaje):
-        self.logger.error(mensaje)
+        self._logger.error(mensaje)
